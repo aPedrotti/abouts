@@ -39,7 +39,7 @@ linkerd check
 kubectl get pods -n linkerd
 ```
 
-### Deploy An App
+### Deploy An Appw
 
 ```bash
 echo "Deploy a sample app from "
