@@ -1,0 +1,57 @@
+replicaCount: 2
+image:
+  repository: my-web-app
+  tag: latest
+service:
+  type: ClusterIP
+  port: 80
+ingress:
+  enabled: true
+  host: my-web-app.local
+  path: /
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+env:
+  - name: MY_APP_VAR
+    value: "value1"
+  - name: MY_APP_VAR2
+    value: "value2"
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role
+          operator: In
+          values:
+          - worker
+tolerations:
+- key: "dedicated"
+  operator: "Equal"
+  value: "test"
+  effect: "NoExecute"
+volume:
+  name: my-data-volume
+  persistentVolumeClaim:
+    claimName: my-data-pvc
+secret:
+  name: my-secret
+  key: my-secret-key
+  path: /etc/secret-volume
