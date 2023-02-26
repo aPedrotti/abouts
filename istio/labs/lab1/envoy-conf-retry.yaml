@@ -1,0 +1,52 @@
+kubectl create cm envoy --from-file=envoy.yaml=./labs/01/envoy-conf-retry.yaml -o yaml --dry-run=client | kubectl apply -f -
+kubectl rollout restart deploy/envoy
+Now let's try to call an httpbin service endpoint that deliberately returns an error code:
+
+kubectl exec deploy/sleep -- curl -vs http://envoy/status/500
+We see the call fails:
+
+*   Trying 10.44.8.102:80...
+* Connected to envoy (10.44.8.102) port 80 (#0)
+> GET /status/500 HTTP/1.1
+> Host: envoy
+> User-Agent: curl/7.69.1
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 500 Internal Server Error
+< server: envoy
+< date: Thu, 11 Feb 2021 23:34:32 GMT
+< content-type: text/html; charset=utf-8
+< access-control-allow-origin: *
+< access-control-allow-credentials: true
+< content-length: 0
+< x-envoy-upstream-service-time: 130
+<
+* Connection #0 to host envoy left intact
+So let's see what Envoy observed in terms of retries:
+
+kubectl exec deploy/sleep -- curl http://envoy:15000/stats | grep retry
+cluster.httpbin_service.circuit_breakers.default.rq_retry_open: 0
+cluster.httpbin_service.circuit_breakers.high.rq_retry_open: 0
+cluster.httpbin_service.retry.upstream_rq_500: 3
+cluster.httpbin_service.retry.upstream_rq_5xx: 3
+cluster.httpbin_service.retry.upstream_rq_completed: 3
+cluster.httpbin_service.retry_or_shadow_abandoned: 0
+cluster.httpbin_service.upstream_rq_retry: 3
+cluster.httpbin_service.upstream_rq_retry_backoff_exponential: 3
+cluster.httpbin_service.upstream_rq_retry_backoff_ratelimited: 0
+cluster.httpbin_service.upstream_rq_retry_limit_exceeded: 1
+cluster.httpbin_service.upstream_rq_retry_overflow: 0
+cluster.httpbin_service.upstream_rq_retry_success: 0
+vhost.httpbin_host.vcluster.other.upstream_rq_retry: 0
+vhost.httpbin_host.vcluster.other.upstream_rq_retry_limit_exceeded: 0
+vhost.httpbin_host.vcluster.other.upstream_rq_retry_overflow: 0
+vhost.httpbin_host.vcluster.other.upstream_rq_retry_success: 0
+We see that indeed the call to httpbin did get retried 3 times.
+
+Recap
+So far we have taken a basic approach to understanding what the Envoy proxy is and how to configure it. We have also seen how it can alter the behavior of a network call and give us valuable information about how the network is behaving at the request/message level.
+
+Next lab
+In the next lab, we will dig into Istio's control plane a bit more. We'll also see how we can leverage all of these Envoy capabilities (resilience features, routing, observability, security, etc) to implement a secure, observable microservices architecture.
+
