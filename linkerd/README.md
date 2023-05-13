@@ -1,5 +1,15 @@
 # about-linkerd
 
+CNCF-hosted and 100% open source, ultra light and reliable service mesh.
+
+- Instant platform health metrics
+- Zero-config mutual TLS
+- State-of-the-art ultralight Rust dataplane
+
+
+
+
+
 Installing [Linkerd](https://linkerd.io/getting-started/) in a local cluster to understand how this service mesh works
 
 ## Create a local cluster with kind
@@ -12,11 +22,11 @@ kind create cluster --name my-k8s
 kubectl cluster-info --context kind-my-k8s
 ```
 
-## Get Linkerd
+## Get Linkerd cli
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install | sh
-FILE=$(ls $HOME/.linkerd2/bin/linkerd-*)
+FILE=$(if [[ -d $HOME/.linkerd2/bin  ]]; then ls $HOME/.linkerd2/bin/linkerd-*; else echo "did not installed in default dir"; fi)
 sudo mv $HOME/.linkerd2/bin/$FILE /usr/local/bin
 ln -f /usr/local/bin/$FILE /usr/local/bin/linkerd
 linkerd version
@@ -58,14 +68,31 @@ kubectl get -n emojivoto deploy -o yaml \
 echo "this instructs Linkerd to inject the proxy into the pods when they are created"
 echo "As with install, inject is a pure text operation, meaning that you can inspect the input and output before you use it"
 
+linkerd -n emojivoto check --proxy
+
 echo ""
 ```
 
-## Install a dashboard
+## Install Extensions
 
 ```bash
+echo "Dashboard ..."
 linkerd viz install | kubectl apply -f - 
 linkerd check
 linkerd viz dashboard &
 
+echo "Distributed tracing ..."
+linkerd jaeger install | kubectl apply -f -
+
+```
+
+## Removing Installed resources
+
+```bash
+echo "Removing linkerd dependencies"
+linkerd jaeger install | kubectl delete -f -
+linkerd viz install | kubectl delete -f -
+kubectl -n emojivoto get deploy -o yaml | linkerd uninject - | kubectl apply -f -
+kubectl delete -all pods -n emojivoto
+linkerd uninstall
 ```

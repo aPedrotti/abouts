@@ -47,10 +47,11 @@ Souce:
 ```bash
 curl -L https://istio.io/downloadIstio | sh -
 #or
-export ISTIO_VERSION=1.14.1
+export ISTIO_VERSION=1.17.1
 curl -L https://raw.githubusercontent.com/istio/istio/master/release/downloadIstioCandidate.sh | sh -
+mv istio-* istio
 echo "export bin - you can move it to a more suitable folder"
-export PATH=$PATH:$PWD/istio.$ISTIO_VERSION/bin
+export PATH=$PATH:$PWD/istio/bin
 ```
 
 ### How to setup in Kubernetes

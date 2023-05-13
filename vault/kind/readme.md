@@ -3,8 +3,7 @@
 ## Get
 
 ```bash
-export KIND_VERSION="v0.11.1"
-curl -Lo ./kind https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64
+curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
 chmod +x ./kind
 sudo mv kind /usr/local/bin/kind
 ```
@@ -14,7 +13,6 @@ sudo mv kind /usr/local/bin/kind
 ```bash
 kind create cluster --name my-k8s
 kubectl cluster-info --context kind-my-k8s
-kind delete clusters kind-my-k8s
 ```
 
 ### Change Context / Cluster
@@ -36,17 +34,7 @@ kind create cluster --config cluster.yaml --image=kindest/node:v1.25.8
 Create pods, service and Nginx Ingress Deployments
 
 ```bash
-# Ingress Controller
-https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
-# Application
-kubectl apply -f app.yaml
-```
-
-Check Application
-
-```bash
-curl localhost:8080/rock
-curl localhost:8080/roll
+kubectl apply -f manifest.yaml
 ```
 
 ## Delete clusters
@@ -54,3 +42,5 @@ curl localhost:8080/roll
 ```bash
 kind delete clusters kind-<cluster_name>
 ```
+
+## Deploy Vault
