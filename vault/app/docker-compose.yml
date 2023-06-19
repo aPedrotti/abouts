@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+    ports:
+      - 5000:5000
+    depends_on:
+      - db
+      - vault
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: my-app
+      MYSQL_USER: my-user
+      MYSQL_PASSWORD: my-password
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  vault:
+    image: vault
+    restart: always
+    ports:
+      - 8200:8200
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+    volumes:
+      - vault-data:/vault/file
+
+volumes:
+  mysql-data:
+  vault-data:
