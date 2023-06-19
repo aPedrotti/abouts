@@ -1,0 +1,4 @@
+flask==
+hvac==
+psycopg2==
+pymysql==
