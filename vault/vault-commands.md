@@ -7,6 +7,8 @@ audit      debug      kv         list       monitor    operator   plugin     pri
 
 ## AUTH
 
+[https://www.vaultproject.io/docs/auth]
+
 ```bash
 vault auth enable userpass
 
@@ -26,7 +28,7 @@ disable  enable   list     move     tune
 
 ```
 
-### LIST
+### List
 
 defaults
 
@@ -46,7 +48,7 @@ sys/          system       system_46221ea4       system endpoints used for contr
 vault path-help aws
 ```
 
-### ENABLE
+### Enable
 
 ```bash
 # defaults
@@ -68,10 +70,12 @@ vault secrets enable -path=app kv #
 ## Integrate with AWS
 
 vault secrets enable -path=aws aws
+
 vault write aws/config/root \
     access_key=$AWS_ACCESS_KEY_ID \
     secret_key=$AWS_SECRET_ACCESS_KEY \
     region=us-east-1
+
 vault write aws/roles/my-role \
         credential_type=iam_user \
         policy_document=iam-role.json
@@ -110,6 +114,21 @@ vault kv destroy -versions=4 secret/customer/acme # permanently destroy values -
 vault read secret/config
 vault kv metadata put -delete-version-after=10s secret/test
 vault kv put secret/test message="data1"
-vault kv get secret/test sleep 11 && vault kv get secret/test 
+vault kv get secret/test 
+```
+
+## OPERATOR
+
+[https://developer.hashicorp.com/vault/docs/commands/operator#usage]
+
+```bash
+    generate-root    Generates a new root token
+    init             Initializes a server
+    key-status       Provides information about the active encryption key
+    rekey            Generates new unseal keys
+    rotate           Rotates the underlying encryption key
+    seal             Seals the Vault server
+    step-down        Forces Vault to resign active duty
+    unseal           Unseals the Vault server
 
 ```

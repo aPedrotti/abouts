@@ -1,12 +1,20 @@
-# Descomplicando Vault with Nomad
+# Uncomplicating Vault
+
+## TL;DR
+
+You will find information about implementing and managing Hashicorp Vault service as a study path from Hashicorp Learn.
 
 ## About
 
-It is forked from @badtuxx nomad training, but mainly focused creating a lab for Hashicorp Vault capabilities.
+It is initially forked from @badtuxx nomad training, however it was main focused to create labs to implement Hashicorp Vault capabilities.
 
-You will spin-up a virtual machine to run your cluster Nomad and use Vault.
+You would be able to spin-up two differnt kind of environments to test:
 
-The journey is from #LinuxTips ["Nomad + Vault"](https://www.youtube.com/playlist?list=PLf-O3X2-mxDlBQW_1kb_RT6LcYX_XwyAG) playlist and [Vault Learn](https://learn.hashicorp.com/vault) documentation.
+- Virtual machine (with Vagrant + Nomad)
+
+- Kubernetes Cluster (with Kind)
+
+The nomad journey was initially taken from #LinuxTips ["Nomad + Vault"](https://www.youtube.com/playlist?list=PLf-O3X2-mxDlBQW_1kb_RT6LcYX_XwyAG) playlist, addapting local environment with Vagrant and agreagating more functions of Hashicorp Vault with [Vault Learn](https://learn.hashicorp.com/vault) documentation
 
 All these runs in dev mode (in-memory). If you would like to persist, check full path (days) for Nomad and vault-run-prod.md.
 
@@ -14,8 +22,10 @@ You can check vault-commands.md for further vault cli references
 
 ## Requirements
 
-- virtualbox
-- vagrant
+- kind [https://kind.sigs.k8s.io/docs/user/quick-start/]
+- kubectl []
+- virtualbox []
+- vagrant []
 
 ## Run VM
 
@@ -49,11 +59,11 @@ nomad job status
 ## Vault start
 
 ```bash
-vault server -dev -dev-listen-address :8200 -dev-root-token-id naosei &
 #export VAULT_ADDR='http://10.0.2.15:8200'
 export VAULT_ADDR='http://127.0.0.1:8200'
-
 export VAULT_DEV_ROOT_TOKEN_ID=naosei
+vault server -dev -dev-listen-address :8200 -dev-root-token-id "${VAULT_DEV_ROOT_TOKEN_ID}" &
+# Grab unseal key and add 
 export VAULT_UNSEAL_KEY="....."
 
 # About Sealing 
@@ -158,3 +168,75 @@ vault write dbs/roles/my-postgres-role db_name=my-postgres-connection allowed_ro
 vault policy write my-postgres-policy-read vault-secrets-database/3-access-tables-policy-pgsql.hcl
 vault read dbs/creds/my-postgres-role
 ```
+
+## Vault in Kubernetes
+
+You can deploy Vault via helm chart as following documentations 
+
+### Deploy Environment
+
+- Spin up a cluster using kind [kind/readme.md]
+
+- Add hashicorp repository
+
+`helm repo add hashicorp https://helm.releases.hashicorp.com`
+
+- Deploy Vault
+
+*Check kubernetes matrix versions at [https://developer.hashicorp.com/vault/docs/platform/k8s/helm]*
+
+`helm install vault hashicorp/vault`
+
+Vault will be deployed, but not initialized (sealed);
+
+`vault operator init`
+
+Save the unseal keys and root token
+
+`vault operator unseal`
+
+and paste one of the keys ... repeat 3x (threashold)
+
+`vault login`
+
+...and use your root token
+
+### Integrate kubernetes Secrets with vault
+
+How to integrate vault with kubernetes cluster via External Secrets Operator
+
+Documentation: [https://external-secrets.io/v0.8.5/]
+
+Operator Project: [https://github.com/external-secrets/external-secrets]
+
+- create a kv in vault
+
+`vault secrets enable -mount=my-passwords kv`
+
+`vault kv put -mount=my-passwords my-data user=andre pass=passwrd`
+
+- create a policy in vault to read this kv
+
+`vault policy write my-policy policy-kv.hcl`
+
+- create a token for this policy
+
+`vault token create -policy=my-policy`
+
+- create a generic secret in kubernetes for this token
+
+`kubectl create secret generic my-vault-secret-token --from-literal=token=hvs.blablablablabla`
+
+- create a clusterSecretStore (for External Secrets Operator)
+
+`kubectl create -f cluster-secret-store-my-pass.yaml`
+
+*Secret Store (namespaced) & Cluster Secret Store: How do I access my Secret inside Vault (or other provider)*
+
+- create your external secret ref
+
+`kubectl create -f external-secret.yaml`
+
+*External Secret - What secret do I want to access*
+
+

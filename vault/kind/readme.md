@@ -27,8 +27,8 @@ kubectl config use-contexts kind-<cluster_name>
 Create cluster exposing ports for nginx:
 
 ```bash
-#k8s image versions - https://hub.docker.com/r/kindest/node/tags
-kind create cluster --config cluster.yaml --image=kindest/node:v1.25.8
+#k8s image versions - https://hub.docker.com/r/kindest/node/tags - you will not be able to run newer images if you have older kind version
+kind create cluster --config cluster.yaml --image=kindest/node:v1.26.6
 ```
 
 Create pods, service and Nginx Ingress Deployments
