@@ -23,11 +23,6 @@ locals {
   project_name = "Pedrotti"
 }
 
-variable "ami_version" {
-  default = "ami-067d1e60475437da2"
-  description = "Image ID from AMI catalog regarding this region"
-}
-
 resource "aws_instance" "app_server" {
   ami             = var.ami_version
   instance_type   = "t2.micro"
