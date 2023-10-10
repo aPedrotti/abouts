@@ -1,10 +1,16 @@
 terraform {
-  backend "remote" {
+  cloud {
     organization = "pedrotti"
     workspaces {
       name = "getting-started"
     }  
   }
+  #backend "remote" {
+  #  organization = "pedrotti"
+  #  workspaces {
+  #    name = "getting-started"
+  #  }  
+  #}
   #backend "s3" {
   # bucket = "bucket-1989"
   # key    = "states/ec2"
