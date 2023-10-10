@@ -1,9 +1,16 @@
 terraform {
-  backend "s3" {
-    bucket = "bucket-1989"
-    key    = "states/ec2"
-    region = "us-east-1"
+  backend "remote" {
+    organization = "pedrotti"
+    workspaces {
+      name = "getting-started"
+    }  
   }
+  #backend "s3" {
+  # bucket = "bucket-1989"
+  # key    = "states/ec2"
+  # region = "us-east-1"
+  #}
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,7 +20,7 @@ terraform {
 }
 
 provider "aws" {
-  profile = "default"
+  #profile = "default"
   region  = "us-east-1"
   # Configuration options
 }

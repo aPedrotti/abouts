@@ -4,6 +4,7 @@ variable "ami_version" {
 }
 
 variable "ssh_public_key" {
-  type = "string"
+  type = string
+  default = ""
   description = "Your public key will be attached to the ec2"
 }
