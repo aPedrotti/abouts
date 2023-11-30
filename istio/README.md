@@ -41,14 +41,19 @@ kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl versio
 
 ## Istio
 
-Souce:
+Source:
 [https://istio.io/docs/setup/getting-started]
 
 ```bash
 curl -L https://istio.io/downloadIstio | sh -
 #or
-export ISTIO_VERSION=1.17.1
+# Download Latest
 curl -L https://raw.githubusercontent.com/istio/istio/master/release/downloadIstioCandidate.sh | sh -
+# or specific version
+export ISTIO_VERSION=1.19.0
+export TARGET_ARCH=x86_64
+curl -L https://istio.io/downloadIstio | sh -
+
 mv istio-* istio
 echo "export bin - you can move it to a more suitable folder"
 export PATH=$PATH:$PWD/istio/bin

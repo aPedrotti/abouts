@@ -1,5 +1,4 @@
-
-
+#!/bin/bash
 create(){
   eksctl create cluster \
  --name platform \
@@ -12,13 +11,14 @@ create(){
  --version 1.26 \
  --region us-east-1
 }
+
 update(){
   eksctl utils update-cluster-logging --enable-types=all --region=us-east-1 --cluster=platform
 }
 
 
 delete(){
-eksctl delete cluster \
- --name platform \
- --region=us-east-1
+  eksctl delete cluster \
+  --name platform \
+  --region=us-east-1
 }
