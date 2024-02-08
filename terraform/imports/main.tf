@@ -1,10 +1,10 @@
 terraform {
-  cloud {
-    organization = "pedrotti"
-    workspaces {
-      name = "tfcloud-test"
-    }  
-  }
+  #cloud {
+  #  organization = "pedrotti"
+  #  workspaces {
+  #    name = "getting-started"
+  #  }  
+  #}
   #backend "remote" {
   #  organization = "pedrotti"
   #  workspaces {
@@ -29,4 +29,13 @@ provider "aws" {
   #profile = "default"
   region  = "us-east-1"
   # Configuration options
+}
+
+# https://developer.hashicorp.com/terraform/language/values/locals#declaring-a-local-value
+locals {
+  project_name = "pedrotti-samples"
+}
+
+resource "aws_instance" "runner" {
+
 }

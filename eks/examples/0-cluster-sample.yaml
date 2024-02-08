@@ -1,0 +1,112 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: my-cluster
+  region: us-east-1
+  tags:
+    karpenter.sh/discovery: cluster-with-karpenter
+
+nodeGroups:
+  - name: ng1-public
+    instanceType: m5.xlarge
+    instanceName: custom-node-name
+    desiredCapacity: 4
+
+    ssh: # import inline public key
+      publicKey: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqZEdzvHnK/GVP8nLngRHu/GDi/3PeES7+Bx6l3koXn/Oi/UmM9/jcW5XGziZ/oe1cPJ777eZV7muEvXg5ZMQBrYxUtYCdvd8Rt6DIoSqDLsIPqbuuNlQoBHq/PU2IjpWnp/wrJQXMk94IIrGjY8QHfCnpuMENCucVaifgAhwyeyuO5KiqUmD8E0RmcsotHKBV9X8H5eqLXd8zMQaPl+Ub7j5PG+9KftQu0F/QhdFvpSLsHaxvBzA5nhIltjkaFcwGQnD1rpCM3+UnQE7Izoa5Yt1xoUWRwnF+L2TKovW7+bYQ1kxsuuiX149jXTCJDVjkYCqi7HkrXYqcC1sbsror someuser@hostname"
+  - name: ng2-private
+    instanceType: m5.large
+    ssh: # use existing EC2 key
+      publicKeyName: ec2_dev_key
+    minSize: 2
+    maxSize: 8
+    volumeSize: 100
+    volumeType: gp2
+    ami: ami-05ecac759c81e0b0c
+    amiFamily: AmazonLinux2
+    availabilityZones: ["us-east-1a"] # use single AZ to optimise data transfer between instances
+    privateNetworking: true
+    # defaults to true, which enforces the use of IMDSv2 tokens
+    disableIMDSv1: false
+    preBootstrapCommands:
+      # allow docker registries to be deployed as cluster service
+      - "sed '2i \"insecure-registries\": [\"172.20.0.0/16\",\"10.100.0.0/16\"],'  /etc/docker/daemon.json"
+      - "systemctl restart docker"
+    labels:
+      nodegroup-type: frontend-workloads
+    iam:
+      withAddonPolicies:
+        albIngress: true
+        autoScaler: true
+        cloudWatch: true
+        ebs: true
+        efs: true
+    classicLoadBalancerNames:
+      - ng3-classic-load-balancer
+    taints:
+      - key: special
+        value: "true"
+        effect: NoSchedule
+      - key: your.domain.com/db
+        value: "true"
+        effect: NoSchedule
+      - key: your.domain.com/production
+        value: "true"
+        effect: NoExecute
+    tags:
+    # EC2 tags required for cluster-autoscaler auto-discovery
+      k8s.io/cluster-autoscaler/node-template/label/lifecycle: OnDemand
+      k8s.io/cluster-autoscaler/node-template/label/aws.amazon.com/spot: "false"
+      k8s.io/cluster-autoscaler/node-template/label/gpu-count: "0"
+      k8s.io/cluster-autoscaler/enabled: "true"
+      k8s.io/cluster-autoscaler/cluster-23: "owned"
+
+vpc:
+  controlPlaneSubnetIDs: [subnet-1234, subnet-5678]
+  controlPlaneSecurityGroupIDs: [sg-1234, sg-5678]
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+  publicAccessCIDRs: ["1.1.1.1/32"]
+  id: "vpc-1234"  # (optional, must match VPC ID used for each subnet below)
+  cidr: "192.168.0.0/16"       # (optional, must match CIDR used by the given VPC)
+  subnets:
+    # must provide 'private' and/or 'public' subnets by availability zone as shown
+    private:
+      us-east-1a:
+        id: "subnet-2345"
+        cidr: "10.1.0.0/16" # (optional, must match CIDR used by the given subnet)
+
+      us-east-1b:
+        id: "subnet-3456"
+        cidr: "10.2.0.0/16"  # (optional, must match CIDR used by the given subnet)
+        # cluster AZs must be set explicitly for single AZ nodegroup example to work
+      
+      us-east-1c:
+        id: "subnet-4567"
+        cidr: "10.1.0.0/16"  # (optional, must match CIDR used by the given subnet)
+        # cluster AZs must be set explicitly for single AZ nodegroup example to work
+
+availabilityZones: ["us-east-1a", "us-east-1b", "us-east-1c"]
+
+
+karpenter:
+  version: 'v0.20.0' # Exact version must be provided
+  createServiceAccount: true # default is false
+  withSpotInterruptionQueue: true # adds all required policies and rules for supporting Spot Interruption Queue, default is false
+
+
+gitops:
+  flux:
+    gitProvider: github             # required. options are github or gitlab
+    flags:                          # required. arbitrary map[string]string for all flux args.
+    # these args are not controlled by eksctl. see https://fluxcd.io/docs/get-started/ for all available flags
+      owner: "dr-who"
+      repository: "our-org-gitops-repo"
+      private: "true"
+      branch: "main"
+      namespace: "flux-system"
+      path: "clusters/cluster-12"
+      team: "team1,team2"
